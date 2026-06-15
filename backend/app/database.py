@@ -10,6 +10,11 @@ if db_url.startswith("postgresql://"):
 elif db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 
+# Strip any query parameters (like sslmode=require) since asyncpg does not
+# support them as direct keyword arguments via SQLAlchemy's connect interface.
+if "?" in db_url:
+    db_url = db_url.split("?")[0]
+
 # Use the IPv4-compatible pooled port (6543) instead of direct port (5432) 
 # for Supabase connections to bypass IPv6 routing limitations on platforms like Railway.
 if "supabase.co:5432" in db_url:
