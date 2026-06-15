@@ -47,11 +47,3 @@ app.include_router(copilot.router)
 @app.get("/health")
 async def health():
     return {"status": "ok", "service": "xeno-crm-backend"}
-
-
-@app.get("/api/debug/db-host")
-async def db_host():
-    url = settings.database_url
-    if "@" in url:
-        return {"host": url.split("@")[-1].split("/")[0]}
-    return {"host": "unknown"}
