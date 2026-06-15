@@ -1,6 +1,6 @@
 // Use relative paths so the Vite dev proxy routes /api/* → localhost:8000
 // In production, set VITE_API_BASE to your deployed backend URL
-const BASE = import.meta.env.VITE_API_BASE || ''
+const BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '')
 
 async function req(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
