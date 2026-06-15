@@ -177,7 +177,6 @@ export default function CampaignsPage({ onSelectCampaign, theme }) {
 
           </div>
         </div>
-        </div>
       </div>
     </div>
   )
