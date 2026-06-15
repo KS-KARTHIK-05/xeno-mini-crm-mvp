@@ -12,7 +12,7 @@ A **Campaign Copilot** — a single-screen, AI-native CRM where a marketer types
 |---|---|---|
 | **Frontend** | React.js + Vite + Tailwind CSS | Fast SPA, great component model for the split-pane UI |
 | **Backend** | Python + FastAPI | Native async, perfect for background workers and WebSocket broadcasting |
-| **Database** | PostgreSQL via Supabase | Serverless, reliable, and segment filters map naturally to SQL |
+| **Database** | PostgreSQL via Neon DB (or Supabase) | Serverless, reliable, and segment filters map naturally to SQL |
 | **Real-time** | WebSockets (FastAPI native) | Stream live receipt events to the UI without polling |
 | **AI Engine** | Google Gemini API (Structured Outputs) | Guarantees clean JSON for segment rules and message templates |
 
@@ -48,19 +48,19 @@ A **Campaign Copilot** — a single-screen, AI-native CRM where a marketer types
 React UI
    │  (1) Launch Campaign
    ▼
-FastAPI Backend ──────────────── Supabase DB
+FastAPI Backend ──────────────── Neon DB
    │  Inserts communications     status = "pending"
    │
    ▼ (background task, no blocking)
-Channel Service Stub (async worker inside FastAPI)
+Channel Service Stub (or Local Simulation Fallback if offline)
    │  • 2–5 second simulated network delay
    │  • Weighted random outcome per message:
    │      70% → delivered + read
    │      20% → delivered, unread
    │      10% → failed
    │
-   ▼ (mock webhook callback → CRM receipt endpoint)
-FastAPI /api/receipts
+   ▼ (mock webhook callback OR local DB transaction)
+FastAPI Receipts / DB Update
    │  Updates communications table
    │
    ▼
@@ -94,7 +94,7 @@ User Input: "Re-engage customers who spent ₹5k+ in last 6 months
      }
      │
      ▼
-[Step 2] Segment Evaluation (JSON Rules → SQL → Supabase)
+[Step 2] Segment Evaluation (JSON Rules → SQL → Neon DB)
      → Returns: count=847, sample=[Priya, Rahul, Ananya...]
      → Shows SQL preview to marketer (transparency feature)
      │
@@ -201,18 +201,18 @@ Skipping the visual builder isn't a limitation — **it's the product point of v
 | Segment computation | On-demand SQL query | Pre-computed + cached in Redis, refreshed on schedule |
 | Campaign dispatch | Sequential per-customer loop | Batched parallel dispatch with rate limiting |
 | WebSocket | Single server, in-memory | Redis pub/sub for multi-instance broadcast |
-| DB | Supabase free tier | Read replicas + PgBouncer connection pooling |
+| DB | Neon DB free tier | PgBouncer transaction pooling (cache size=0) |
 
 ---
 
 ## 8. Deployment
 
-- **CRM Backend**: Render (Python web service — free tier)
-- **Channel Service Stub**: Render (separate free tier service)
-- **Frontend**: Vercel (free tier static hosting)
-- **Database**: Supabase (managed cloud Postgres — free tier)
+- **CRM Backend**: Railway or Render (Python web service)
+- **Channel Service Stub**: Railway or Render (Python web service)
+- **Frontend**: Vercel (Static hosting)
+- **Database**: Neon DB (Serverless Postgres)
 
-Both Render services share environment variables for the callback URL so the channel stub can POST receipts back to the correct CRM endpoint regardless of environment. Note: Render free tier services spin down after 15 minutes of inactivity — acceptable for a demo, and worth mentioning in the README.
+Environment variables route communication between services. In case of network segregation or if the channel service is offline, the backend's local simulation fallback automatically takes over to ensure the UI live stream behaves correctly.
 
 ---
 

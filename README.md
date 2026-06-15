@@ -41,7 +41,7 @@ An AI-native, premium B2B Campaign CRM platform featuring an interactive AI Copi
 ## ⚙️ Local Setup & Configuration
 
 ### 1. Database Setup
-Create a PostgreSQL instance (e.g., Supabase) and initialize the tables using:
+Create a PostgreSQL instance (e.g., Neon DB or Supabase) and initialize the tables using:
 ```bash
 psql -h <host> -U <user> -d <database> -f database/schema.sql
 ```
@@ -109,5 +109,5 @@ psql -h <host> -U <user> -d <database> -f database/schema.sql
 
 This repository is ready for instant cloud deployment:
 
-* **Backend & Channel Service (Render)**: Defined in `render.yaml` inside the root directory. Ready to connect and deploy.
-* **Frontend (Vercel)**: Configured in `frontend/vercel.json`. Utilizes rewrite proxies to bypass CORS when routing `/api/*` requests to Render.
+* **Backend & Channel Service (Railway/Render)**: Configured in `render.yaml` or directly deployed on Railway.
+* **Frontend (Vercel)**: Configured in `frontend/vercel.json`. Utilizes rewrite proxies to bypass CORS when routing `/api/*` requests to the Railway backend.
