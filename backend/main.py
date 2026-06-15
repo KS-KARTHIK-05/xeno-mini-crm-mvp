@@ -29,12 +29,28 @@ app = FastAPI(
 async def global_exception_handler(request, exc):
     import traceback
     import logging
+    from app.config import get_settings
+    
+    db_url = get_settings().database_url
+    try:
+        if "@" in db_url:
+            parts = db_url.split("@")
+            prefix = parts[0]
+            suffix = "@".join(parts[1:])
+            if ":" in prefix:
+                subparts = prefix.split(":")
+                prefix = ":".join(subparts[:-1]) + ":***"
+            db_url = f"{prefix}@{suffix}"
+    except Exception:
+        pass
+
     logging.getLogger("fastapi").exception(exc)
     return JSONResponse(
         status_code=500,
         content={
             "error": exc.__class__.__name__,
             "message": str(exc),
+            "database_url": db_url,
             "traceback": traceback.format_exception(type(exc), exc, exc.__traceback__)
         }
     )
