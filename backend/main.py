@@ -16,28 +16,12 @@ async def lifespan(app: FastAPI):
     print("[STOP] Xeno Mini CRM backend shutting down.")
 
 
-from fastapi.responses import JSONResponse
-
 app = FastAPI(
     title="Xeno Mini CRM",
     description="AI-native CRM for reaching shoppers — by Aura Styles & Co",
     version="1.0.0",
     lifespan=lifespan,
 )
-
-@app.exception_handler(Exception)
-async def global_exception_handler(request, exc):
-    import traceback
-    import logging
-    logging.getLogger("fastapi").exception(exc)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": exc.__class__.__name__,
-            "message": str(exc),
-            "traceback": traceback.format_exception(type(exc), exc, exc.__traceback__)
-        }
-    )
 
 # CORS — allow the React frontend
 app.add_middleware(
