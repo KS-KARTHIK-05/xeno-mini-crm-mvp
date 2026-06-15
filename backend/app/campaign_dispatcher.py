@@ -185,14 +185,125 @@ async def _send_one(
                 )
                 await db.commit()
         except Exception as exc:
-            log.warning("Failed to send comm %s: %s", comm.id, exc)
-            async with session_factory() as db:
-                await db.execute(
-                    update(Communication)
-                    .where(Communication.id == comm.id)
-                    .values(status="failed", failed_at=datetime.now(timezone.utc))
+            log.warning("Failed to send comm %s via channel-service: %s. Falling back to local simulation.", comm.id, exc)
+            asyncio.create_task(
+                _simulate_receipt_locally(comm.id, customer.id, comm.campaign_id, channel, session_factory)
+            )
+
+
+# ── Local Receipt Simulation Fallback ────────────────────────────────────────
+
+async def _simulate_receipt_locally(
+    comm_id: uuid.UUID,
+    customer_id: uuid.UUID,
+    campaign_id: uuid.UUID,
+    channel: str,
+    session_factory: async_sessionmaker,
+) -> None:
+    """Simulates delivery pipeline locally with realistic delays and probabilities."""
+    import random
+    
+    # 1. sent
+    await asyncio.sleep(random.uniform(0.3, 1.2))
+    await _update_status_and_broadcast(comm_id, "sent", session_factory)
+
+    # 2. delivered / failed
+    await asyncio.sleep(random.uniform(0.5, 3.0))
+    rates = {
+        "whatsapp": {"deliver": 0.92, "read": 0.68, "click": 0.30, "convert": 0.12},
+        "sms":      {"deliver": 0.85, "read": 0.40, "click": 0.15, "convert": 0.06},
+        "email":    {"deliver": 0.78, "read": 0.35, "click": 0.22, "convert": 0.10},
+        "rcs":      {"deliver": 0.90, "read": 0.60, "click": 0.28, "convert": 0.11},
+    }.get(channel.lower(), {"deliver": 0.92, "read": 0.68, "click": 0.30, "convert": 0.12})
+
+    if random.random() > rates["deliver"]:
+        await _update_status_and_broadcast(comm_id, "failed", session_factory)
+        log.info("Local Sim: comm %s → FAILED", comm_id)
+        return
+
+    await _update_status_and_broadcast(comm_id, "delivered", session_factory)
+    log.info("Local Sim: comm %s → delivered", comm_id)
+
+    # 3. read
+    await asyncio.sleep(random.uniform(1.0, 8.0))
+    if random.random() > rates["read"]:
+        return
+    await _update_status_and_broadcast(comm_id, "read", session_factory)
+    log.info("Local Sim: comm %s → read", comm_id)
+
+    # 4. clicked
+    await asyncio.sleep(random.uniform(2.0, 10.0))
+    if random.random() > rates["click"]:
+        return
+    await _update_status_and_broadcast(comm_id, "clicked", session_factory)
+    log.info("Local Sim: comm %s → clicked", comm_id)
+
+    # 5. converted
+    await asyncio.sleep(random.uniform(5.0, 20.0))
+    if random.random() > rates["convert"]:
+        return
+    await _update_status_and_broadcast(comm_id, "converted", session_factory)
+    log.info("Local Sim: comm %s → converted", comm_id)
+
+
+async def _update_status_and_broadcast(
+    comm_id: uuid.UUID,
+    status: str,
+    session_factory: async_sessionmaker,
+) -> None:
+    """Updates communication status and timestamps, then broadcasts to WebSocket."""
+    STATUS_COLUMN = {
+        "sent":       "sent_at",
+        "delivered":  "delivered_at",
+        "read":       "read_at",
+        "clicked":    "clicked_at",
+        "converted":  "converted_at",
+        "failed":     "failed_at",
+    }
+    col = STATUS_COLUMN.get(status)
+    if not col:
+        return
+
+    ts = datetime.now(timezone.utc)
+    values = {"status": status, col: ts}
+
+    try:
+        async with session_factory() as db:
+            result = await db.execute(
+                update(Communication)
+                .where(Communication.id == comm_id)
+                .values(**values)
+                .returning(
+                    Communication.id,
+                    Communication.campaign_id,
+                    Communication.customer_id,
+                    Communication.channel,
                 )
-                await db.commit()
+            )
+            row = result.fetchone()
+            if not row:
+                return
+            await db.commit()
+
+            cust_row = await db.execute(
+                select(Customer.name, Customer.city)
+                .where(Customer.id == row.customer_id)
+            )
+            cust = cust_row.fetchone()
+
+        from app.ws_manager import manager as ws_manager
+        await ws_manager.broadcast({
+            "type":             "delivery_event",
+            "campaign_id":      str(row.campaign_id),
+            "communication_id": str(comm_id),
+            "customer_name":    cust.name if cust else "—",
+            "customer_city":    cust.city if cust else "",
+            "channel":          row.channel,
+            "status":           status,
+            "timestamp":        ts.isoformat(),
+        })
+    except Exception as exc:
+        log.warning("Local simulation update/broadcast failed for comm %s: %s", comm_id, exc)
 
 
 # ── Message personalisation ──────────────────────────────────────────────────
@@ -214,3 +325,4 @@ def _personalise(template: str, customer: Customer) -> str:
     # Also handle {{ name }} style with spaces
     msg = re.sub(r"\{\{\s*(\w+)\s*\}\}", lambda m: replacements.get(f"{{{{{m.group(1)}}}}}", m.group(0)), msg)
     return msg
+

@@ -88,6 +88,9 @@ class CampaignStatsOut(BaseModel):
     read_rate: Optional[float] = None
     created_at: datetime
     launched_at: Optional[datetime] = None
+    segment_rules: Optional[dict] = None
+    message_template: Optional[str] = None
+    ai_prompt: Optional[str] = None
 
 
 # ── Communications ───────────────────────────────────────────

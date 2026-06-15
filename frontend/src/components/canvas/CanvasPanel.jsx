@@ -49,7 +49,7 @@ export default function CanvasPanel({ campaignId, theme }) {
           delivered: ['total_sent', 'total_delivered'],
           read:      ['total_sent', 'total_delivered', 'total_read'],
           clicked:   ['total_sent', 'total_delivered', 'total_read', 'total_clicked'],
-          failed:    ['total_failed'],
+          failed:    ['total_sent', 'total_failed'],
         }[status]
         if (keys) {
           keys.forEach(k => { base[k] = (base[k] || 0) + 1 })

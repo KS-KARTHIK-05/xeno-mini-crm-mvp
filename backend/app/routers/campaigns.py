@@ -83,7 +83,10 @@ async def list_campaigns(
             c.audience_size,
             c.created_at,
             c.launched_at,
-            COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('sent','delivered','read','clicked','converted')), 0) AS total_sent,
+            c.segment_rules,
+            c.message_template,
+            c.ai_prompt,
+            COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('sent','delivered','read','clicked','converted','failed')), 0) AS total_sent,
             COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('delivered','read','clicked','converted')), 0) AS total_delivered,
             COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('read','clicked','converted')), 0) AS total_read,
             COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('clicked','converted')), 0) AS total_clicked,
@@ -114,7 +117,8 @@ async def get_campaign(campaign_id: str, db: AsyncSession = Depends(get_db)):
     row = await db.execute(text("""
         SELECT
             c.id, c.name, c.channel, c.status, c.audience_size, c.created_at, c.launched_at,
-            COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('sent','delivered','read','clicked','converted')), 0) AS total_sent,
+            c.segment_rules, c.message_template, c.ai_prompt,
+            COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('sent','delivered','read','clicked','converted','failed')), 0) AS total_sent,
             COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('delivered','read','clicked','converted')), 0) AS total_delivered,
             COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('read','clicked','converted')), 0) AS total_read,
             COALESCE(COUNT(comm.id) FILTER (WHERE comm.status IN ('clicked','converted')), 0) AS total_clicked,

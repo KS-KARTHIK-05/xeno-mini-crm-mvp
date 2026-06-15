@@ -16,7 +16,7 @@ const WS_CUMULATIVE = {
   read:      ['total_sent', 'total_delivered', 'total_read'],
   clicked:   ['total_sent', 'total_delivered', 'total_read', 'total_clicked'],
   converted: ['total_sent', 'total_delivered', 'total_read', 'total_clicked'],
-  failed:    ['total_failed'],
+  failed:    ['total_sent', 'total_failed'],
 }
 
 export default function MetricsGrid({ campaign, comms = [], wsEvents = [], loading, theme }) {
