@@ -2,8 +2,18 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 
 // Use window.location.host so WS goes through the Vite proxy (port 5173 → 8000)
 // In production, set this to wss://your-backend-domain.com/api/copilot/ws
-const WS_PROTO = window.location.protocol === 'https:' ? 'wss' : 'ws'
-const WS_URL   = `${WS_PROTO}://${window.location.host}/api/copilot/ws`
+const getWsUrl = () => {
+  const apiBase = import.meta.env.VITE_API_BASE
+  if (apiBase && (apiBase.startsWith('http://') || apiBase.startsWith('https://'))) {
+    const wsProto = apiBase.startsWith('https://') ? 'wss' : 'ws'
+    const host = apiBase.replace(/^https?:\/\//, '').replace(/\/$/, '')
+    return `${wsProto}://${host}/api/copilot/ws`
+  }
+  const WS_PROTO = window.location.protocol === 'https:' ? 'wss' : 'ws'
+  return `${WS_PROTO}://${window.location.host}/api/copilot/ws`
+}
+
+const WS_URL = getWsUrl()
 
 export function useWebSocket() {
   const wsRef         = useRef(null)

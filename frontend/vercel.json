@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://xeno-crm-backend.onrender.com/api/:path*"
+      "destination": "https://xeno-crm-backend-production-a3bf.up.railway.app/api/:path*"
     }
   ]
 }
