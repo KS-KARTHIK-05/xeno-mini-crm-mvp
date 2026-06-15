@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background-color: #050505;
+    color: #e4e4e7;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Thin custom scrollbar */
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+}
+
+@layer components {
+  /* Glass surface */
+  .glass {
+    background: rgba(255,255,255,0.03);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+
+  /* Shimmer skeleton */
+  .shimmer-bg {
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.04) 0%,
+      rgba(255,255,255,0.09) 50%,
+      rgba(255,255,255,0.04) 100%
+    );
+    background-size: 600px 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+
+  /* Purple text gradient */
+  .text-gradient-purple {
+    background: linear-gradient(135deg, #c4b5fd, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg
+           bg-accent text-white text-sm font-medium
+           hover:bg-accent-dark active:scale-95
+           transition-all duration-150 cursor-pointer select-none;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md
+           text-zinc-400 text-xs font-medium
+           hover:text-zinc-200 hover:bg-white/5
+           transition-all duration-150 cursor-pointer select-none;
+  }
+
+  /* Card base */
+  .card {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  /* Input base */
+  .input-base {
+    @apply w-full bg-[#0d0d0d] rounded-lg px-3 py-2 text-sm text-zinc-200
+           placeholder-zinc-600 outline-none
+           transition-all duration-150;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .input-base:focus {
+    border-color: rgba(139,92,246,0.5);
+    box-shadow: 0 0 0 3px rgba(139,92,246,0.08);
+  }
+
+  /* Status colours */
+  .status-pending   { @apply text-zinc-500; }
+  .status-sent      { @apply text-sent; }
+  .status-delivered { @apply text-delivered; }
+  .status-read      { @apply text-read; }
+  .status-clicked   { @apply text-clicked; }
+  .status-failed    { @apply text-failed; }
+  .status-converted { @apply text-converted; }
+}

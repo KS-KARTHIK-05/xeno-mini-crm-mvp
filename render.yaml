@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: xeno-crm-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --app-dir backend --host 0.0.0.0 --port $PORT
+
+  - type: web
+    name: xeno-channel-service
+    env: python
+    buildCommand: pip install -r channel-service/requirements.txt
+    startCommand: uvicorn main:app --app-dir channel-service --host 0.0.0.0 --port $PORT

@@ -1,0 +1,15 @@
+{
+  "venvPath": ".",
+  "venv": "venv",
+  "pythonVersion": "3.10",
+  "executionEnvironments": [
+    {
+      "root": "backend",
+      "extraPaths": ["backend"]
+    },
+    {
+      "root": "channel-service",
+      "extraPaths": ["channel-service"]
+    }
+  ]
+}
